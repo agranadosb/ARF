@@ -59,12 +59,8 @@ class ResNet(Module):
         if isinstance(input_dimensions, int):
             input_dimensions = (input_dimensions, input_dimensions)
         
-        if len(input_dimensions) != 2:
-            raise ValueError("The input dimensions must be a tuple of two dimensions")
-        if input_dimensions[0] != input_dimensions[1] or len(input_dimensions) != 2:
-            raise ValueError("The input dimensions must be square")
-        if any(dim < 1 for dim in input_dimensions):
-            raise ValueError("The input dimensions must be greater than zero")
+        self._validate_input_dimensions(input_dimensions)
+        self._validate_blocks(blocks)
 
         self.input_dimensions = input_dimensions
         self.blocks = blocks
@@ -95,14 +91,35 @@ class ResNet(Module):
         
         self.layers = layers
 
-        def forward(self, x: Tensor) -> Tensor:
-            """Forward pass of the network.
-            args:
-                x: input tensor
+    @staticmethod
+    def _validate_input_dimensions(input_dimensions: Tuple[int, int]) -> None:
+        if len(input_dimensions) != 2:
+            raise ValueError("The input dimensions must be a tuple of two dimensions")
+        if input_dimensions[0] != input_dimensions[1] or len(input_dimensions) != 2:
+            raise ValueError("The input dimensions must be square")
+        if any(dim < 1 for dim in input_dimensions):
+            raise ValueError("The input dimensions must be greater than zero")
 
-            returns:
-                x: output tensor
-            """
-            for layer in self.layers:
-                x = layer(x)
-            return x
+    @staticmethod
+    def _validate_blocks(blocks: List[Tuple[int, int, int]]) -> None:
+        for block in blocks:
+            if len(block) != 3:
+                raise ValueError("Each block must be a tuple with three elements")
+            if block[0] < 1:
+                raise ValueError("The number of repetitions must be greater than zero")
+            if block[1] < 1:
+                raise ValueError("The number of output channels must be greater than zero")
+            if block[2] < 1:
+                raise ValueError("The kernel size must be greater than zero")
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the network.
+        args:
+            x: input tensor
+
+        returns:
+            x: output tensor
+        """
+        for layer in self.layers:
+            x = layer(x)
+        return x

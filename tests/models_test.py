@@ -1,7 +1,8 @@
 from unittest import TestCase
 
-from arf.models import ConvBlock, ResidualBlock, ResNet
 from torch.nn import ReLU
+
+from arf.models import ConvBlock, ResidualBlock, ResNet
 
 
 class BaseTest(TestCase):
@@ -106,15 +107,15 @@ class ResNetTest(TestCase):
 
         self.assertEqual(resnet.layers[-3].in_features, dense_size)
 
-    def test_resnet_input_dimensions_incorrect_length(self):
+    def test_resnet_validate_input_dimensions_incorrect_length(self):
         with self.assertRaises(ValueError):
             ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=2, input_dimensions=(256, 256, 256))
 
-    def test_resnet_input_dimensions_incorrect_values_zero(self):
+    def test_resnet_validate_input_dimensions_incorrect_values_zero(self):
         with self.assertRaises(ValueError):
             ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=2, input_dimensions=(0, 0))
 
-    def test_resnet_input_dimensions_incorrect_value_zero(self):
+    def test_resnet_validate_input_dimensions_incorrect_value_zero(self):
         with self.assertRaises(ValueError):
             ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=2, input_dimensions=0)
 
@@ -131,3 +132,19 @@ class ResNetTest(TestCase):
         resnet = ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=20)
 
         self.assertEqual(resnet.layers[-3].out_features, 20)
+
+    def test_resnet_validate_blocks_bad_length(self):
+        with self.assertRaises(ValueError):
+            ResNet([(1, 3)], num_classes=2)
+    
+    def test_resnet_validate_blocks_bad_repetitions_value(self):
+        with self.assertRaises(ValueError):
+            ResNet([(0, 3, 64)], num_classes=2)
+
+    def test_resnet_validate_blocks_bad_kernel_size_value(self):
+        with self.assertRaises(ValueError):
+            ResNet([(1, 0, 64)], num_classes=2)
+
+    def test_resnet_validate_blocks_bad_output_channels_value(self):
+        with self.assertRaises(ValueError):
+            ResNet([(1, 3, 0)], num_classes=2)
