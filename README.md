@@ -1,4 +1,4 @@
-# ARF Project
+# ARF Project 1.0.0
 
 X-ray Chest Classification Task using ResNet, Inception and Transformed based.
 
