@@ -24,8 +24,9 @@ def parse_blocks(blocks: Union[str, IO]) -> List[Tuple[int, int, int]]:
 environment_variables: dict[str, str] = {**dotenv_values()}
 
 resnet_blocks_file = environment_variables.get(RESNET_BLOCKS_ENV_VAR, None)
-if not os.path.isfile(resnet_blocks_file):
-    raise ValueError(f"{RESNET_BLOCKS_ENV_VAR} is not a file")
-
-with open(resnet_blocks_file, "r") as f:
-    RESNET_BLOCKS = parse_blocks(f)
+if resnet_blocks_file is not None:
+    if not os.path.isfile(resnet_blocks_file):
+        raise ValueError(f"{RESNET_BLOCKS_ENV_VAR} is not a file")
+    
+    with open(resnet_blocks_file, "r") as f:
+        RESNET_BLOCKS = parse_blocks(f)

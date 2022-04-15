@@ -1,7 +1,8 @@
 from unittest import TestCase
+from unittest.mock import patch
 
-from arf.conf.env import parse_blocks
-
+with patch('arf.constants.RESNET_BLOCKS_ENV_VAR', "NotExistsThisKey"):
+    from arf.conf.env import parse_blocks
 
 class TestEnv(TestCase):
     def setUp(self):
