@@ -1,3 +1,15 @@
+from typing import Tuple, Union
+
+from torch import Tensor
+
+TEXT_LABEL = 'text'
+INDEX_LABEL = 'index'
+ONE_HOT_LABEL = 'one hot'
+
+LABEL_TYPE_OPTIONS = [TEXT_LABEL, INDEX_LABEL, ONE_HOT_LABEL]
+
+PAIR_TYPE = Tuple[Tensor, Union[str, int, Tensor]]
+
 RESNET_BLOCKS_ENV_VAR = 'RESNET_BLOCKS'
 
 ENV_VARIABLES = {RESNET_BLOCKS_ENV_VAR: """

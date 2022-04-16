@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 import torch
+from torch import Tensor
 from torchvision import transforms
 
 from arf.data import XRayChestDataset
@@ -23,13 +24,13 @@ class DataTest(TestCase):
     
     def test_init_dataset_correctly(self):
         correct_samples = ["test1.png", "test2.png", "test1.png", "test2.png"]
-        correct_labels = ["class1", "class1", "class2", "class2"]
+        correct_labels = Tensor([0, 0, 1, 1])
         correct_length = 4
         
         self.dataset._init_dataset()
         
         self.assertListEqual(self.dataset.samples, correct_samples)
-        self.assertListEqual(self.dataset.labels, correct_labels)
+        self.assertTrue(torch.all(self.dataset.labels.eq(correct_labels)))
         self.assertEqual(self.dataset._len, correct_length)
     
     def test_len_dataset_correctly(self):
@@ -113,3 +114,89 @@ class DataTest(TestCase):
         item, label = dataset[0]
         
         self.assertEqual(item.shape, correct_numpy.shape)
+
+    def test_label_type_incorrectly(self):
+        with self.assertRaises(TypeError):
+            XRayChestDataset(self.folder, label_type="incorrect")
+
+    def test_label_type_one_hot(self):
+        correct_label = torch.tensor([1, 0])
+        dataset = XRayChestDataset(self.folder, label_type="one hot")
+        correct_class = "class1"
+
+        dataset._init_dataset()
+        _, label = dataset[0]
+        item_class = dataset.label_mapping[correct_label.nonzero().item()]
+
+        self.assertTrue(torch.all(label.eq(torch.tensor(correct_label))))
+        self.assertEqual(item_class, correct_class)
+
+    def test_getitem_two_items_one_hot(self):
+        dataset = XRayChestDataset(self.folder, label_type="one hot")
+        correct_label1 = torch.tensor([1, 0])
+        correct_label2 = torch.tensor([0, 1])
+        correct_class1 = "class1"
+        correct_class2 = "class2"
+
+        dataset._init_dataset()
+        items = dataset[1:3]
+        item_class1 = dataset.label_mapping[items[0][1].nonzero().item()]
+        item_class2 = dataset.label_mapping[items[1][1].nonzero().item()]
+
+        self.assertTrue(torch.all(items[0][1].eq(torch.tensor(correct_label1))))
+        self.assertTrue(torch.all(items[1][1].eq(torch.tensor(correct_label2))))
+        self.assertEqual(item_class1, correct_class1)
+        self.assertEqual(item_class2, correct_class2)
+
+    def test_getitem_all_items_one_hot(self):
+        dataset = XRayChestDataset(self.folder, label_type="one hot")
+        correct_labels = [
+            torch.tensor([1, 0]), torch.tensor([1, 0]), torch.tensor([0, 1]), torch.tensor([0, 1])
+        ]
+    
+        dataset._init_dataset()
+        items = dataset[:]
+
+        self.assertEqual(len(items), 4)
+        for index, (_, label) in enumerate(items):
+            self.assertTrue(torch.all(label.eq(correct_labels[index])))
+
+    def test_label_type_index(self):
+        correct_label = 0
+        dataset = XRayChestDataset(self.folder, label_type="index")
+        correct_class = "class1"
+    
+        dataset._init_dataset()
+        _, label = dataset[0]
+        item_class = dataset.label_mapping[0]
+    
+        self.assertEqual(label, correct_label)
+        self.assertEqual(item_class, correct_class)
+
+    def test_getitem_two_items_index(self):
+        dataset = XRayChestDataset(self.folder, label_type="index")
+        correct_label1 = 0
+        correct_label2 = 1
+        correct_class1 = "class1"
+        correct_class2 = "class2"
+    
+        dataset._init_dataset()
+        items = dataset[1:3]
+        item_class1 = dataset.label_mapping[items[0][1]]
+        item_class2 = dataset.label_mapping[items[1][1]]
+    
+        self.assertEqual(items[0][1], correct_label1)
+        self.assertEqual(items[1][1], correct_label2)
+        self.assertEqual(item_class1, correct_class1)
+        self.assertEqual(item_class2, correct_class2)
+
+    def test_getitem_all_items_index(self):
+        dataset = XRayChestDataset(self.folder, label_type="index")
+        correct_labels = [0, 0, 1, 1]
+    
+        dataset._init_dataset()
+        items = dataset[:]
+    
+        self.assertEqual(len(items), 4)
+        for index, (_, label) in enumerate(items):
+            self.assertEqual(label, correct_labels[index])
