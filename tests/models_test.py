@@ -89,21 +89,21 @@ class ResNetTest(TestCase):
     def test_resnet_dense_size(self):
         resnet = ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=2)
         # 2 stride 2 for first layer, 1 stride 2 per block and 1 stride 1 for last layer.
-        dense_size = 512 / 2 ** 2 / 2 ** 3 / 2
+        dense_size = 128 * (512 // (2 ** (2 + 3))) ** 2
 
         self.assertEqual(resnet.layers[-3].in_features, dense_size)
 
     def test_resnet_dense_size_different_input_dimensions_tuple(self):
         resnet = ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=2, input_dimensions=(256, 256))
         # 2 stride 2 for first layer, 1 stride 2 per block and 1 stride 1 for last layer.
-        dense_size = 256 / 2 ** 2 / 2 ** 3 / 2
+        dense_size = 128 * (256 // (2 ** (2 + 3))) ** 2
 
         self.assertEqual(resnet.layers[-3].in_features, dense_size)
 
     def test_resnet_dense_size_different_input_dimensions_value(self):
         resnet = ResNet([(1, 3, 64), (1, 3, 128), (1, 3, 128)], num_classes=2, input_dimensions=256)
         # 2 stride 2 for first layer, 1 stride 2 per block and 1 stride 1 for last layer.
-        dense_size = 256 / 2 ** 2 / 2 ** 3 / 2
+        dense_size = 128 * (256 // (2 ** (2 + 3))) ** 2
 
         self.assertEqual(resnet.layers[-3].in_features, dense_size)
 
@@ -135,7 +135,7 @@ class ResNetTest(TestCase):
 
     def test_resnet_validate_blocks_bad_length(self):
         with self.assertRaises(ValueError):
-            ResNet([(1, 3)], num_classes=2)
+            ResNet([(1, 3)], num_classes=2)  # noqa
     
     def test_resnet_validate_blocks_bad_repetitions_value(self):
         with self.assertRaises(ValueError):

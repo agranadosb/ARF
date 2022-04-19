@@ -1,7 +1,7 @@
 from typing import Tuple, List, Union
 
 from torch import Tensor, add
-from torch.nn import Module, Conv2d, MaxPool2d, AvgPool2d, Flatten, Linear, ReLU, Softmax
+from torch.nn import Module, Conv2d, MaxPool2d, AvgPool2d, Flatten, Linear, ReLU, Softmax, Sequential
 
 from arf.models.base import ConvBlock
 
@@ -23,11 +23,11 @@ class ResidualBlock(Module):
     
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1) -> None:
         super().__init__()
-        self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, stride, 1)
+        self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, stride, padding=1)
         self.conv2 = ConvBlock(out_channels, out_channels, kernel_size, 1, 1, relu=False)
         self.downsample = None
         if stride != 1 or in_channels != out_channels:
-            self.downsample = Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False)
+            self.downsample = Conv2d(in_channels, out_channels, 1, stride, bias=False)
     
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the residual block.
@@ -73,39 +73,42 @@ class ResNet(Module):
         super().__init__()
         if isinstance(input_dimensions, int):
             input_dimensions = (input_dimensions, input_dimensions)
-        
+    
         self._validate_input_dimensions(input_dimensions)
         self._validate_blocks(blocks)
-
+    
         self.input_dimensions = input_dimensions
         self.blocks = blocks
         self.classes = num_classes
         self.input_channels = input_channels
-        # 2 stride 2 for first layer, 1 stride 2 per block and 1 stride 1 for last layer.
-        dense_size = self.input_dimensions[0] // (2 ** (2 + len(self.blocks) + 1))
-        
         layers = [
             ConvBlock(input_channels, 64, kernel_size=7, stride=2, padding=3),
             MaxPool2d(kernel_size=3, stride=2, padding=1)
         ]
         stride = 1
+
+        input_channels = 64
+        out_channels = 64
         for number_blocks, kernel_size, out_channels in blocks:
             for index in range(number_blocks):
                 layers.append(ResidualBlock(input_channels, out_channels, kernel_size, stride=stride))
                 input_channels = out_channels
                 stride = 1
             stride = 2
-        
+        # 2 stride 2 for first layer, 1 stride 2 per block and 1 stride 1 for last layer.
+        dense_size = out_channels * (self.input_dimensions[0] // (2 ** (2 + len(self.blocks)))) ** 2
+    
         layers.extend([
-            AvgPool2d(kernel_size=2, stride=1),
+            AvgPool2d(kernel_size=2),
             Flatten(),
             Linear(in_features=dense_size, out_features=num_classes),
             ReLU(),
             Softmax()
         ])
-        
+    
         self.layers = layers
-
+        self.nn_layers = Sequential(*layers)
+    
     @staticmethod
     def _validate_input_dimensions(input_dimensions: Tuple[int, int]) -> None:
         """Validates the input dimensions.
@@ -121,7 +124,7 @@ class ResNet(Module):
             raise ValueError("The input dimensions must be square")
         if any(dim < 1 for dim in input_dimensions):
             raise ValueError("The input dimensions must be greater than zero")
-
+    
     @staticmethod
     def _validate_blocks(blocks: List[Tuple[int, int, int]]) -> None:
         """Validates the blocks of the network.
@@ -139,7 +142,7 @@ class ResNet(Module):
                 raise ValueError("The number of output channels must be greater than zero")
             if block[2] < 1:
                 raise ValueError("The kernel size must be greater than zero")
-
+    
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the network.
 
@@ -152,6 +155,4 @@ class ResNet(Module):
         -------
         torch.Tensor : output tensor
         """
-        for layer in self.layers:
-            x = layer(x)
-        return x
+        return self.nn_layers(x)
