@@ -6,6 +6,7 @@ import torch
 from torch import Tensor
 from torchvision import transforms
 
+from arf.constants import INDEX_LABEL, ONE_HOT_LABEL
 from arf.data import XRayChestDataset
 
 
@@ -128,7 +129,7 @@ class DataTest(TestCase):
 
     def test_label_type_one_hot(self):
         correct_label = torch.tensor([1, 0])
-        dataset = XRayChestDataset(self.folder, label_type="one hot")
+        dataset = XRayChestDataset(self.folder, label_type=ONE_HOT_LABEL)
         correct_class = "class1"
 
         dataset._init_dataset()
@@ -139,7 +140,7 @@ class DataTest(TestCase):
         self.assertEqual(item_class, correct_class)
 
     def test_getitem_two_items_one_hot(self):
-        dataset = XRayChestDataset(self.folder, label_type="one hot")
+        dataset = XRayChestDataset(self.folder, label_type=ONE_HOT_LABEL)
         correct_label1 = torch.tensor([1, 0])
         correct_label2 = torch.tensor([0, 1])
         correct_class1 = "class1"
@@ -156,7 +157,7 @@ class DataTest(TestCase):
         self.assertEqual(item_class2, correct_class2)
 
     def test_getitem_all_items_one_hot(self):
-        dataset = XRayChestDataset(self.folder, label_type="one hot")
+        dataset = XRayChestDataset(self.folder, label_type=ONE_HOT_LABEL)
         correct_labels = [
             torch.tensor([1, 0]), torch.tensor([1, 0]), torch.tensor([0, 1]), torch.tensor([0, 1])
         ]
@@ -170,7 +171,7 @@ class DataTest(TestCase):
 
     def test_label_type_index(self):
         correct_label = 0
-        dataset = XRayChestDataset(self.folder, label_type="index")
+        dataset = XRayChestDataset(self.folder, label_type=INDEX_LABEL)
         correct_class = "class1"
     
         dataset._init_dataset()
@@ -181,7 +182,7 @@ class DataTest(TestCase):
         self.assertEqual(item_class, correct_class)
 
     def test_getitem_two_items_index(self):
-        dataset = XRayChestDataset(self.folder, label_type="index")
+        dataset = XRayChestDataset(self.folder, label_type=INDEX_LABEL)
         correct_label1 = 0
         correct_label2 = 1
         correct_class1 = "class1"
@@ -198,7 +199,7 @@ class DataTest(TestCase):
         self.assertEqual(item_class2, correct_class2)
 
     def test_getitem_all_items_index(self):
-        dataset = XRayChestDataset(self.folder, label_type="index")
+        dataset = XRayChestDataset(self.folder, label_type=INDEX_LABEL)
         correct_labels = [0, 0, 1, 1]
     
         dataset._init_dataset()
@@ -207,3 +208,58 @@ class DataTest(TestCase):
         self.assertEqual(len(items), 4)
         for index, (_, label) in enumerate(items):
             self.assertEqual(label, correct_labels[index])
+
+    def test_label_to_string_text_correctly(self):
+        dataset = XRayChestDataset(self.folder)
+        dataset._init_dataset()
+        correct_label = "class1"
+    
+        result = dataset.label_to_string("class1")
+    
+        self.assertEqual(result, correct_label)
+
+    def test_label_to_string_text_incorrectly(self):
+        dataset = XRayChestDataset(self.folder)
+        dataset._init_dataset()
+
+        with self.assertRaises(ValueError):
+            dataset.label_to_string("class3")
+
+    def test_label_to_string_text_incorrectly_type(self):
+        dataset = XRayChestDataset(self.folder, label_type=INDEX_LABEL)
+        dataset._init_dataset()
+
+        with self.assertRaises(ValueError):
+            dataset.label_to_string("class1")
+
+    def test_label_to_string_index_correctly(self):
+        dataset = XRayChestDataset(self.folder, label_type=INDEX_LABEL)
+        dataset._init_dataset()
+        correct_label = "class1"
+    
+        result = dataset.label_to_string(0)
+    
+        self.assertEqual(result, correct_label)
+
+    def test_label_to_string_index_incorrectly(self):
+        dataset = XRayChestDataset(self.folder, label_type=INDEX_LABEL)
+        dataset._init_dataset()
+
+        with self.assertRaises(ValueError):
+            dataset.label_to_string(2)
+
+    def test_label_to_string_one_hot_correctly(self):
+        dataset = XRayChestDataset(self.folder, label_type=ONE_HOT_LABEL)
+        dataset._init_dataset()
+        correct_label = "class1"
+    
+        result = dataset.label_to_string(Tensor([1, 0]))
+    
+        self.assertEqual(result, correct_label)
+
+    def test_label_to_string_one_hot_incorrectly(self):
+        dataset = XRayChestDataset(self.folder, label_type=ONE_HOT_LABEL)
+        dataset._init_dataset()
+    
+        with self.assertRaises(ValueError):
+            dataset.label_to_string(Tensor([1, 1]))

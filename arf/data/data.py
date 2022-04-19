@@ -85,6 +85,35 @@ class XRayChestDataset(Dataset):
             self.labels = one_hot(Tensor(labels).to(torch.int64), len(self.label_mapping))
         
         self._len = len(self.samples)
+
+    def label_to_string(self, label: Union[int, str, Tensor]) -> str:
+        """Converts a label in index or one hot encoding to a string.
+        
+        Parameters
+        ----------
+        label : Union[int, str, Tensor]
+            The label to be converted.
+        
+        Returns
+        -------
+        str : The label converted to a string.
+        """
+        if isinstance(label, str):
+            if label not in self.label_mapping.values():
+                raise ValueError(f'The label {label} does not exist')
+            if self.label_type != TEXT_LABEL:
+                raise ValueError(f'If the label type is not TEXT_LABEL the label cannot be a string - {label}')
+            return label
+
+        index_text_label = label
+        if self.label_type == ONE_HOT_LABEL:
+            index_text_label = label.nonzero().item()
+        elif isinstance(label, Tensor):
+            index_text_label = label.item()
+
+        if index_text_label not in self.label_mapping:
+            raise ValueError(f'The label {label} does not exist')
+        return self.label_mapping[index_text_label]
     
     def __len__(self) -> int:
         r"""Returns the length of the dataset.
@@ -127,13 +156,8 @@ class XRayChestDataset(Dataset):
         
         samples = []
         for filename, label in zip(filenames, labels):
-            if self.label_type == ONE_HOT_LABEL:
-                index_text_label = label.nonzero().item()
-            else:
-                index_text_label = label.item()
-            
-            text_label = self.label_mapping[index_text_label]
-            
+            text_label = self.label_to_string(label)
+
             image_path = os.path.join(self.folder, text_label, filename)
             tensor = read_image(image_path, ImageReadMode.RGB).float()
             channels = transforms.functional.get_image_num_channels(tensor)
@@ -143,12 +167,12 @@ class XRayChestDataset(Dataset):
             
             if channels == tensor.shape[0] and not self.channels_first:
                 tensor = tensor.permute(1, 2, 0)
-            
+
             samples_label = label
             if self.label_type == TEXT_LABEL:
                 samples_label = text_label
             elif self.label_type == INDEX_LABEL:
-                samples_label = index_text_label
+                samples_label = label.item()
             
             samples.append((tensor, samples_label))
         
