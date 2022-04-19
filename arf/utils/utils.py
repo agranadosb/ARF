@@ -1,11 +1,8 @@
-from typing import Optional
-
 from matplotlib import pyplot as plt
 from torch import Tensor
 
 
-def plot_images(images: Tensor, labels: Tensor, n_rows: Optional[int] = None, n_cols: Optional[int] = None,
-                size: Optional[tuple] = None):
+def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3, size: tuple = 12):
     """
     Plot a grid of images.
 
@@ -26,19 +23,16 @@ def plot_images(images: Tensor, labels: Tensor, n_rows: Optional[int] = None, n_
     -------
     None
     """
-    if n_rows is None:
-        n_rows = 1
-    if n_cols is None:
-        n_cols = 3
-    if size is None:
-        size = (12, 12)
     if isinstance(size, int):
         size = (size, size)
-    
+    total_images = n_rows * n_cols
+
     if size[0] <= 0 and size[1] <= 0:
         raise ValueError("Size must be positive.")
     if n_rows <= 0 or n_cols <= 0:
         raise ValueError("Number of rows and columns must be positive.")
+    if len(images) < total_images or len(labels) < total_images:
+        raise ValueError("Number of rows and columns must be less than the number of images.")
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=size)
     for i, ax in enumerate(axes.flat):
