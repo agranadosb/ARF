@@ -8,11 +8,17 @@ from arf.models.base import ConvBlock
 
 class ResidualBlock(Module):
     """This class implements a residual block.
-    args:
-        in_channels (int): number of input channels
-        out_channels (int): number of output channels
-        kernel_size (int): size of the convolutional kernel
-        stride (int): stride of the convolution
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels
+    out_channels : int
+        Number of output channels
+    kernel_size : int = 3
+        Size of the convolutional kernel
+    stride : int = 1
+        Stride of the convolution
     """
     
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1) -> None:
@@ -25,11 +31,15 @@ class ResidualBlock(Module):
     
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the residual block.
-        args:
-            x: input tensor
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
 
-        returns:
-            x: output tensor
+        Returns
+        -------
+        torch.Tensor: output tensor
         """
         out = self.conv2(self.conv1(x))
         if self.downsample is not None:
@@ -42,15 +52,20 @@ class ResNet(Module):
     that define how are the parameters of the convolutional layers and how many
     repetitions of the block will be applied
     
-    args:
-        blocks (ResidualBlock): List of blocks of the network. Each block is a
-            tuple with the number of repetitions of the block, output channels and
-            kernel size. For example, a block that will be repeated 3 times with
-            output channels of 32 and kernel size of 3 will be defined as:
-             - `(3, 32, 3)`
-        num_classes (int): number of classes to be predicted
-        input_channels (int): number of input channels
-        input_dimensions (int): number of input dimensions
+    Parameters
+    ----------
+    blocks arf.models.ResidualBlock:
+        List of blocks of the network. Each block is a
+        tuple with the number of repetitions of the block, output channels and
+        kernel size. For example, a block that will be repeated 3 times with
+        output channels of 32 and kernel size of 3 will be defined as:
+         - `(3, 32, 3)`
+    num_classes : int = 10
+        Number of classes to be predicted
+    input_channels : int = 3
+        Number of input channels
+    input_dimensions : int = 512
+        Number of input dimensions
     """
     
     def __init__(self, blocks: List[Tuple[int, int, int]], *, num_classes: int = 10, input_channels: int = 3,
@@ -93,6 +108,13 @@ class ResNet(Module):
 
     @staticmethod
     def _validate_input_dimensions(input_dimensions: Tuple[int, int]) -> None:
+        """Validates the input dimensions.
+        
+        Parameters
+        ----------
+        input_dimensions : tuple
+            Tuple with the input dimensions.
+        """
         if len(input_dimensions) != 2:
             raise ValueError("The input dimensions must be a tuple of two dimensions")
         if input_dimensions[0] != input_dimensions[1] or len(input_dimensions) != 2:
@@ -102,6 +124,12 @@ class ResNet(Module):
 
     @staticmethod
     def _validate_blocks(blocks: List[Tuple[int, int, int]]) -> None:
+        """Validates the blocks of the network.
+        
+        Parameters
+        ----------
+        blocks : List[Tuple[int, int, int]]
+        """
         for block in blocks:
             if len(block) != 3:
                 raise ValueError("Each block must be a tuple with three elements")
@@ -114,11 +142,15 @@ class ResNet(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the network.
-        args:
-            x: input tensor
 
-        returns:
-            x: output tensor
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
+
+        Returns
+        -------
+        torch.Tensor : output tensor
         """
         for layer in self.layers:
             x = layer(x)

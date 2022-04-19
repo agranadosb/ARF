@@ -9,13 +9,20 @@ class ConvBlock(Module):
     convolutional layer, a batch normalization layer, and a ReLU activation
     function.
 
-    Args:
-        in_channels (int): number of input channels
-        out_channels (int): number of output channels
-        kernel_size (int): size of the convolutional kernel
-        stride (int): stride of the convolutional kernel
-        padding (int): padding of the convolutional kernel
-        relu (bool): whether to use a ReLU activation function
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels
+    out_channels : int
+        Number of output channels
+    kernel_size : int = 3
+        Size of the convolutional kernel
+    stride : int = 1
+        Stride of the convolutional kernel
+    padding : int = 1
+        Padding of the convolutional kernel
+    relu : bool = True
+        Whether to use a ReLU activation function
     """
     
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
@@ -31,10 +38,13 @@ class ConvBlock(Module):
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the convolutional block.
 
-        Args:
-            x (torch.Tensor): input tensor
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
 
-        Returns:
-            torch.Tensor: output tensor
+        Returns
+        -------
+        torch.Tensor: Output tensor
         """
         return self.relu(self.bn(self.conv(x)))
