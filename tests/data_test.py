@@ -1,3 +1,4 @@
+import os.path
 from unittest import TestCase
 
 import numpy as np
@@ -15,8 +16,8 @@ class DataTest(TestCase):
         super().setUp()
     
     def test_create_dataset_correctly(self):
-        correct_folder = 'tests/static/data/'
-        
+        correct_folder = os.path.join(os.getcwd(), 'tests/static/data/')
+
         self.assertEqual(self.dataset.folder, correct_folder)
         self.assertListEqual(self.dataset.samples, [])
         self.assertListEqual(self.dataset.labels, [])
@@ -32,7 +33,13 @@ class DataTest(TestCase):
         self.assertListEqual(self.dataset.samples, correct_samples)
         self.assertTrue(torch.all(self.dataset.labels.eq(correct_labels)))
         self.assertEqual(self.dataset._len, correct_length)
-    
+
+    def test_dataset_incorrect_folder(self):
+        folder = 'notExists/static/data/'
+
+        with self.assertRaises(FileNotFoundError):
+            XRayChestDataset(folder)
+
     def test_len_dataset_correctly(self):
         correct_length = 4
         

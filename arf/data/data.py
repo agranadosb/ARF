@@ -1,5 +1,5 @@
 import os
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 import torch
 from torch import Tensor
@@ -20,19 +20,33 @@ class XRayChestDataset(Dataset):
     class allows to set the sample label as one hot, index or text (text by
     default).
     
-    Args:
-        folder (str): The folder with the data divided in folders where each
-        folder represents a class.
-        images_transformations (torchvision.transforms.Compose): The transforms to be applied to the images.
-        channels_first (bool): If True, the images will be returned with the channels first.
-        label_type (str): The type of label to be returned. This type should be one of the following:
-            - 'one_hot': The label will be a one-hot vector.
-            - 'index': The label will be an integer.
-            - 'text': The label will be a string.
+    Parameters
+    ----------
+    folder : str
+        The folder with the data divided in folders where each folder
+        represents a class.
+    label_type : str = text
+        The type of label to be returned. This type should be one of the following:
+        - 'one_hot': The label will be a one-hot vector.
+        - 'index': The label will be an integer.
+        - 'text': The label will be a string.
+    channels_first : bool, optional = False
+        If True, the images will be returned with the channels first.
+    images_transformations: torch.nn.Sequential, optional = None
+        The transforms to be applied to the images.
+    init: bool, optional = False
+        If True, the dataset will be initialized.
     """
     
-    def __init__(self, folder: str, *, images_transformations: Sequential = None, channels_first: bool = False,
-                 label_type: str = None) -> None:
+    def __init__(self, folder: str, *, label_type: str = TEXT_LABEL, channels_first: Optional[bool] = None,
+                 images_transformations: Optional[Sequential] = None,
+                 init: Optional[bool] = None) -> None:
+        if not os.path.isabs(folder):
+            folder = os.path.join(os.getcwd(), folder)
+        
+        if not os.path.exists(folder):
+            raise FileNotFoundError(f'The folder {folder} does not exist')
+        
         if label_type is None:
             label_type = TEXT_LABEL
         if label_type not in LABEL_TYPE_OPTIONS:
@@ -48,6 +62,9 @@ class XRayChestDataset(Dataset):
         self.transforms = None
         if images_transformations is not None:
             self.transforms = jit.script(images_transformations)
+        
+        if init:
+            self._init_dataset()
     
     def _init_dataset(self) -> None:
         r"""Initializes the dataset creating a list with samples and a list
@@ -72,21 +89,25 @@ class XRayChestDataset(Dataset):
     def __len__(self) -> int:
         r"""Returns the length of the dataset.
         
-        Returns:
+        Returns
+        -------
             int: The length of the dataset.
         """
         return self._len
     
     def __getitem__(self, idx: int) -> Union[List[PAIR_TYPE], PAIR_TYPE]:
         r"""Returns the image at the index idx.
-        
-        Args:
-            idx (int): The index of the image.
 
-        Returns:
-            Union[List[`arf.constants.PAIR_TYPE`], `arf.constants.PAIR_TYPE`]:
-            A list with the images and the labels or tuple with the image and
-            the label if only one sample is selected.
+        Parameters
+        ----------
+        idx : int
+            The index of the image to be returned.
+
+        Returns
+        -------
+        Union[List[`arf.constants.PAIR_TYPE`], `arf.constants.PAIR_TYPE`]:
+        A list with the images and the labels or tuple with the image and
+        the label if only one sample is selected.
         """
         filenames = self.samples[idx]
         true_labels: Union[str, Tensor] = self.labels[idx]
@@ -128,7 +149,7 @@ class XRayChestDataset(Dataset):
                 samples_label = text_label
             elif self.label_type == INDEX_LABEL:
                 samples_label = index_text_label
-     
+            
             samples.append((tensor, samples_label))
         
         if len(samples) == 1:
