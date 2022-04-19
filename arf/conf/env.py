@@ -4,7 +4,8 @@ from typing import Tuple, List, Union, IO
 import yaml
 from dotenv import dotenv_values
 
-from arf.constants import RESNET_BLOCKS_ENV_VAR
+from arf.constants import RESNET_BLOCKS_ENV_VAR, RESNET_BATCH_SIZE_VAR, TEST_DATA_VAR, VALIDATION_DATA_VAR, \
+    TRAINING_DATA_VAR
 
 
 def parse_blocks(blocks: Union[str, IO]) -> List[Tuple[int, int, int]]:
@@ -24,11 +25,14 @@ def parse_blocks(blocks: Union[str, IO]) -> List[Tuple[int, int, int]]:
         - 128   # out_channels
     ```
     
-    Args:
-        blocks: A yml string or a yml file representing the list of resnet blocks.
+    Parameters
+    ----------
+    blocks : Union[str, IO]
+        A yml string or a yml file representing the list of resnet blocks.
 
-    Returns:
-        A list of tuples representing the blocks.
+    Returns
+    -------
+    A list of tuples representing the blocks.
     """
     parsed_yaml = yaml.safe_load(blocks)
     
@@ -45,6 +49,7 @@ def parse_blocks(blocks: Union[str, IO]) -> List[Tuple[int, int, int]]:
 
 environment_variables: dict[str, str] = {**dotenv_values()}
 
+# Resnet
 resnet_blocks_file = environment_variables.get(RESNET_BLOCKS_ENV_VAR, None)
 RESNET_BLOCKS = None
 if resnet_blocks_file is not None:
@@ -53,3 +58,10 @@ if resnet_blocks_file is not None:
 
     with open(resnet_blocks_file, "r") as f:
         RESNET_BLOCKS = parse_blocks(f)
+
+RESNET_BATCH_SIZE = int(environment_variables.get(RESNET_BATCH_SIZE_VAR, "32"))
+
+# Data Folders
+TRAINING_DATA = environment_variables.get(TRAINING_DATA_VAR, None)
+VALIDATION_DATA = environment_variables.get(VALIDATION_DATA_VAR, None)
+TEST_DATA = environment_variables.get(TEST_DATA_VAR, None)
