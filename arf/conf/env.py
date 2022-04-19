@@ -5,7 +5,7 @@ import yaml
 from dotenv import dotenv_values
 
 from arf.constants import RESNET_BLOCKS_ENV_VAR, RESNET_BATCH_SIZE_VAR, TEST_DATA_VAR, VALIDATION_DATA_VAR, \
-    TRAINING_DATA_VAR
+    TRAINING_DATA_VAR, RESNET_EPOCHS_VAR, RESNET_IMAGE_SIZE_VAR
 
 
 def parse_blocks(blocks: Union[str, IO]) -> List[Tuple[int, int, int]]:
@@ -55,12 +55,13 @@ RESNET_BLOCKS = None
 if resnet_blocks_file is not None:
     if not os.path.isfile(resnet_blocks_file):
         raise ValueError(f"{resnet_blocks_file} is not a file")
-
+    
     with open(resnet_blocks_file, "r") as f:
         RESNET_BLOCKS = parse_blocks(f)
 
 RESNET_BATCH_SIZE = int(environment_variables.get(RESNET_BATCH_SIZE_VAR, "32"))
-
+RESNET_EPOCHS = int(environment_variables.get(RESNET_EPOCHS_VAR, "100"))
+RESNET_IMAGE_SIZE = int(environment_variables.get(RESNET_IMAGE_SIZE_VAR, "512"))
 # Data Folders
 TRAINING_DATA = environment_variables.get(TRAINING_DATA_VAR, None)
 VALIDATION_DATA = environment_variables.get(VALIDATION_DATA_VAR, None)
