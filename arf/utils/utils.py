@@ -1,7 +1,9 @@
-from typing import Union
+from typing import Union, List, Iterable
 
 from matplotlib import pyplot as plt
 from torch import Tensor
+
+from arf.data import XRayChestDataset
 
 
 def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3, size: Union[int, tuple] = 12):
@@ -43,3 +45,21 @@ def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3
         ax.set_xticks([])
         ax.set_yticks([])
     plt.show()
+
+
+def labels_to_string(labels: Iterable[Tensor], dataset: XRayChestDataset) -> List[str]:
+    """ Convert a tensor of labels that could be in index, string or one hot
+    format to a list of strings.
+
+    Parameters
+    ----------
+    labels: Iterable[Tensor]
+        Array of labels.
+    dataset: XRayChestDataset
+        Dataset where the labels were created.
+
+    Returns
+    -------
+    List[str] : List of strings corresponding to the labels.
+    """
+    return list(map(lambda x: dataset.label_to_string(x), labels))
