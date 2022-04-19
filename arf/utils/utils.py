@@ -1,8 +1,10 @@
+from typing import Union
+
 from matplotlib import pyplot as plt
 from torch import Tensor
 
 
-def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3, size: tuple = 12):
+def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3, size: Union[int, tuple] = 12):
     """
     Plot a grid of images.
 
