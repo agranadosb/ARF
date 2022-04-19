@@ -18,7 +18,7 @@ def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3
         Number of rows in the grid.
     n_cols: int = 3
         Number of columns in the grid.
-    size: tuple = (12, 12)
+    size: Union[int, tuple] = 12
         Size of the figure.
 
     Returns
