@@ -7,8 +7,7 @@ from arf.data import XRayChestDataset
 
 
 def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3, size: Union[int, tuple] = 12):
-    """
-    Plot a grid of images.
+    """Plot a grid of images.
 
     Parameters
     ----------
@@ -22,10 +21,6 @@ def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3
         Number of columns in the grid.
     size: Union[int, tuple] = 12
         Size of the figure.
-
-    Returns
-    -------
-    None
     """
     if isinstance(size, int):
         size = (size, size)
@@ -48,7 +43,7 @@ def plot_images(images: Tensor, labels: Tensor, n_rows: int = 1, n_cols: int = 3
 
 
 def labels_to_string(labels: Iterable[Tensor], dataset: XRayChestDataset) -> List[str]:
-    """ Convert a tensor of labels that could be in index, string or one hot
+    """Convert a tensor of labels that could be in index, string or one hot
     format to a list of strings.
 
     Parameters

@@ -132,6 +132,7 @@ class ResNet(Module):
         Parameters
         ----------
         blocks : List[Tuple[int, int, int]]
+            List of blocks.
         """
         for block in blocks:
             if len(block) != 3:

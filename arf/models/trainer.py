@@ -23,14 +23,18 @@ def load_datasets(batch_size: int = 1, dimensions: int = 512) -> Tuple[DataLoade
 
     Parameters
     ----------
-    batch_size : int, optional
+    batch_size : int = 1
         The batch size.
-    dimensions : int, optional
+    dimensions : int = 512
         The dimensions of the images.
 
     Returns
     -------
-    `DataLoader` for training, validation and testing.
+    (
+        `torch.data.DataLoader` for training,
+        `torch.data.DataLoader` for validation,
+        `torch.data.DataLoader` for testing
+    )
     """
     
     transformation = Sequential(
@@ -103,8 +107,7 @@ def accuracy(output: Tensor, target: Tensor) -> float:
     
     Returns
     -------
-    float
-        The accuracy of the model.
+    float : The accuracy of the model.
     """
     return (argmax(output, 1) == argmax(target, 1)).sum().item() / float(target.shape[0])
 
@@ -167,7 +170,7 @@ def epoch_loop(
     return running_loss, acc
 
 
-def evaluate(dataset: DataLoader, model: Module, criterion: _Loss):
+def evaluate(dataset: DataLoader, model: Module, criterion: _Loss) -> Tuple[float, float]:
     """This function evaluates the model. It returns the loss and accuracy.
     
     Parameters
@@ -181,8 +184,10 @@ def evaluate(dataset: DataLoader, model: Module, criterion: _Loss):
     
     Returns
     -------
-    float : The loss of the model.
-    float : The accuracy of the model.
+    (
+        float : The loss of the model,
+        float : The accuracy of the model
+    )
     """
     running_loss = 0.0
     acc = 0.0
@@ -248,9 +253,9 @@ def train_model(epochs: int, train: DataLoader, model: Module, optimizer: Optimi
         )
 
 
-def train_resnet():
+def train_resnet() -> None:
     """This function trains the ResNet model."""
-    train, val, test = load_datasets(RESNET_BATCH_SIZE, RESNET_IMAGE_SIZE)
+    train, val, test = load_datasets(RESNET_BATCH_SIZE, RESNET_IMAGE_SIZE)  # noqa
     criterion = CrossEntropyLoss()
     model = ResNet(RESNET_BLOCKS, num_classes=2, input_dimensions=RESNET_IMAGE_SIZE)
     optimizer = Adam(model.parameters(), lr=0.001)
