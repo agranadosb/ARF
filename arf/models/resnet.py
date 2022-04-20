@@ -103,7 +103,7 @@ class ResNet(Module):
             Flatten(),
             Linear(in_features=dense_size, out_features=num_classes),
             ReLU(),
-            Softmax()
+            Softmax(dim=1)
         ])
     
         self.layers = layers
