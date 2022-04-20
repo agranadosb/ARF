@@ -2,6 +2,7 @@ import argparse
 
 from arf import __version__
 from arf.constants import ENV_VARIABLES
+from arf.models.trainer import train_resnet
 
 """ TODO: Create a CLI for the ARF project. This cli should be able to:
  - Launch training experiments (for this three env variables should be defined:
@@ -32,14 +33,17 @@ PARSER = argparse.ArgumentParser(description="""
 PARSER.add_argument('--version', action='version', version=__version__)
 PARSER.add_argument('-ed', '--env-definition', action=argparse.BooleanOptionalAction,
                     help='Show the env variables and its descriptions.')
+PARSER.add_argument('--train-resnet', action=argparse.BooleanOptionalAction,
+                    help='Train resnet network.')
 
 ARGUMENTS_MAPPING = {
-    "env_definition": show_env_vars
+    "env_definition": show_env_vars,
+    "train_resnet": train_resnet
 }
 
 
 def main() -> None:
     command_line_arguments = vars(PARSER.parse_args())
     for argument, argument_function in ARGUMENTS_MAPPING.items():
-        if argument in command_line_arguments:
-            ARGUMENTS_MAPPING[argument](command_line_arguments.get(argument))
+        if argument in command_line_arguments and command_line_arguments[argument]:
+            ARGUMENTS_MAPPING[argument]()
