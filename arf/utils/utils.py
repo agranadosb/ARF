@@ -2,6 +2,8 @@ from typing import Union, List, Iterable
 
 from matplotlib import pyplot as plt
 from torch import Tensor
+from torch.nn import Sequential
+from torchvision.transforms import Normalize, Resize
 
 from arf.data import XRayChestDataset
 
@@ -58,3 +60,21 @@ def labels_to_string(labels: Iterable[Tensor], dataset: XRayChestDataset) -> Lis
     List[str] : List of strings corresponding to the labels.
     """
     return list(map(lambda x: dataset.label_to_string(x), labels))
+
+
+def normalize_transformation(image_dimensions: int) -> Sequential:
+    """Normalize a tensor.
+
+    Parameters
+    ----------
+    image_dimensions: int
+        Width or height of the image.
+
+    Returns
+    -------
+    Sequential : Sequential transformations for normalize an image.
+    """
+    return Sequential(
+        Normalize([0., 0., 0.], [255., 255., 255.]),
+        Resize([image_dimensions, image_dimensions])
+    )

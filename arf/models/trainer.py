@@ -1,17 +1,20 @@
 from typing import Tuple, Optional
 
 from torch import manual_seed, Tensor, device as torch_device, cuda, no_grad, argmax
-from torch.nn import CrossEntropyLoss, Sequential, Module
+from torch.nn import CrossEntropyLoss, Module
 from torch.nn.modules.loss import _Loss
 from torch.optim import Adam, Optimizer
 from torch.utils.data import DataLoader
-from torchvision.transforms import Resize, Normalize
+from torch.utils.tensorboard import SummaryWriter
+from torchinfo import summary
+from torchvision.utils import make_grid
 
 from arf.conf.env import RESNET_BATCH_SIZE, TRAINING_DATA, VALIDATION_DATA, TEST_DATA, RESNET_BLOCKS, RESNET_EPOCHS, \
     RESNET_IMAGE_SIZE
 from arf.constants import ONE_HOT_LABEL
 from arf.data import XRayChestDataset
 from arf.models import ResNet
+from arf.utils import normalize_transformation
 
 DEVICE = torch_device('cuda' if cuda.is_available() else 'cpu')
 
@@ -36,19 +39,15 @@ def load_datasets(batch_size: int = 1, dimensions: int = 512) -> Tuple[DataLoade
         `torch.data.DataLoader` for testing
     )
     """
-    
-    transformation = Sequential(
-        Normalize([0., 0., 0.], [255., 255., 255.]),
-        Resize([dimensions, dimensions])
-    )
+    normalization = normalize_transformation(dimensions)
     training = XRayChestDataset(
-        TRAINING_DATA, label_type=ONE_HOT_LABEL, images_transformations=transformation, init=True, channels_first=True
+        TRAINING_DATA, label_type=ONE_HOT_LABEL, images_transformations=normalization, init=True, channels_first=True
     )
     validation = XRayChestDataset(
-        VALIDATION_DATA, label_type=ONE_HOT_LABEL, images_transformations=transformation, init=True, channels_first=True
+        VALIDATION_DATA, label_type=ONE_HOT_LABEL, images_transformations=normalization, init=True, channels_first=True
     )
     test = XRayChestDataset(
-        TEST_DATA, label_type=ONE_HOT_LABEL, images_transformations=transformation, init=True, channels_first=True
+        TEST_DATA, label_type=ONE_HOT_LABEL, images_transformations=normalization, init=True, channels_first=True
     )
     
     return (
@@ -253,11 +252,46 @@ def train_model(epochs: int, train: DataLoader, model: Module, optimizer: Optimi
         )
 
 
+def plot_model(model: Module, batch_size: int, dimensions: int) -> None:
+    """This function plots the model.
+    
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model to plot.
+    batch_size : int
+        The batch size.
+    dimensions : int
+        The number of dimensions.
+    """
+    writer = SummaryWriter()
+    
+    training = XRayChestDataset(
+        TRAINING_DATA, label_type=ONE_HOT_LABEL, init=True, channels_first=True,
+        images_transformations=normalize_transformation(dimensions)
+    )
+    
+    images, labels = next(iter(DataLoader(training, shuffle=True, batch_size=batch_size)))
+    
+    # create grid of images
+    img_grid = make_grid(images)
+    writer.add_image('four_fashion_mnist_images', img_grid)
+    
+    images = images.to(DEVICE)
+    writer.add_graph(model, images)
+    
+    writer.close()
+
+
 def train_resnet() -> None:
     """This function trains the ResNet model."""
     train, val, test = load_datasets(RESNET_BATCH_SIZE, RESNET_IMAGE_SIZE)  # noqa
     criterion = CrossEntropyLoss()
     model = ResNet(RESNET_BLOCKS, num_classes=2, input_dimensions=RESNET_IMAGE_SIZE)
+    summary(model, input_size=(RESNET_BATCH_SIZE, 3, RESNET_IMAGE_SIZE, RESNET_IMAGE_SIZE))
+    
     optimizer = Adam(model.parameters(), lr=0.001)
+    
+    plot_model(model, RESNET_BATCH_SIZE, RESNET_IMAGE_SIZE)
     
     train_model(RESNET_EPOCHS, train, model, optimizer, criterion, validation=test, total_epochs=RESNET_EPOCHS)
