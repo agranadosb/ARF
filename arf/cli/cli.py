@@ -18,7 +18,7 @@ def show_env_vars(*_) -> None:
     """
     string_result = ""
     for var, var_description in ENV_VARIABLES.items():
-        string_result += f"{var}: {var_description}\n"
+        string_result += f" - {var:20s}: {var_description}\n"
     print(string_result)
 
 
