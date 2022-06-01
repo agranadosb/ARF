@@ -2,7 +2,7 @@ import argparse
 
 from arf import __version__
 from arf.constants import ENV_VARIABLES
-from arf.models.trainer import train_resnet
+from arf.models.trainer import train_resnet, train_inception, train_vit
 
 """ TODO: Create a CLI for the ARF project. This cli should be able to:
  - Launch training experiments (for this three env variables should be defined:
@@ -22,23 +22,42 @@ def show_env_vars(*_) -> None:
     print(string_result)
 
 
-PARSER = argparse.ArgumentParser(description="""
+PARSER = argparse.ArgumentParser(
+    description="""
     This is the app for the ARF project. This app is based on test how good and
     easy is the development on PyTorch. For that, three deep learning networks
     are used: ResNet, Inception and Transformer. This networks will be trained
     and tested using PyTorch and related third party libraries. For the
     configuration, a .env file is used.
-""")
+"""
+)
 
-PARSER.add_argument('--version', action='version', version=__version__)
-PARSER.add_argument('-ed', '--env-definition', action=argparse.BooleanOptionalAction,
-                    help='Show the env variables and its descriptions.')
-PARSER.add_argument('--train-resnet', action=argparse.BooleanOptionalAction,
-                    help='Train resnet network.')
+PARSER.add_argument("--version", action="version", version=__version__)
+PARSER.add_argument(
+    "-ed",
+    "--env-definition",
+    action=argparse.BooleanOptionalAction,
+    help="Show the env variables and its descriptions.",
+)
+PARSER.add_argument(
+    "--train-resnet",
+    action=argparse.BooleanOptionalAction,
+    help="Train resnet network.",
+)
+PARSER.add_argument(
+    "--train-inception",
+    action=argparse.BooleanOptionalAction,
+    help="Train inception network.",
+)
+PARSER.add_argument(
+    "--train-vit", action=argparse.BooleanOptionalAction, help="Train vit network."
+)
 
 ARGUMENTS_MAPPING = {
     "env_definition": show_env_vars,
-    "train_resnet": train_resnet
+    "train_resnet": train_resnet,
+    "train_inception": train_inception,
+    "train_vit": train_vit,
 }
 
 

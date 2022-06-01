@@ -173,7 +173,7 @@ class XRayChestDataset(Dataset):
                 samples_label = text_label
             elif self.label_type == INDEX_LABEL:
                 samples_label = label.item()
-            
+
             samples.append((tensor, samples_label))
         
         if len(samples) == 1:

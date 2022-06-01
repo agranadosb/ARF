@@ -1,7 +1,8 @@
 from typing import Tuple, List, Union
 
+import torch.nn
 from torch import Tensor, add
-from torch.nn import Module, Conv2d, MaxPool2d, AvgPool2d, Flatten, Linear, ReLU, Softmax, Sequential
+from torch.nn import Module, Conv2d, MaxPool2d, AvgPool2d, Flatten, Linear, Sequential
 
 from arf.models.base import ConvBlock
 
@@ -67,13 +68,13 @@ class ResNet(Module):
     input_dimensions : int = 512
         Number of input dimensions
     """
-    
+
     def __init__(self, blocks: List[Tuple[int, int, int]], *, num_classes: int = 10, input_channels: int = 3,
-                 input_dimensions: Union[int, tuple] = 512) -> None:
+                 input_dimensions: Union[int, tuple] = 512, batch_size: int = 1) -> None:
         super().__init__()
         if isinstance(input_dimensions, int):
             input_dimensions = (input_dimensions, input_dimensions)
-    
+        self.batch_size = batch_size
         self._validate_input_dimensions(input_dimensions)
         self._validate_blocks(blocks)
     
@@ -102,8 +103,7 @@ class ResNet(Module):
             AvgPool2d(kernel_size=2),
             Flatten(),
             Linear(in_features=dense_size, out_features=num_classes),
-            ReLU(),
-            Softmax(dim=1)
+            torch.nn.Sigmoid()
         ])
     
         self.layers = layers
@@ -156,4 +156,5 @@ class ResNet(Module):
         -------
         torch.Tensor : output tensor
         """
-        return self.nn_layers(x)
+        result = self.nn_layers(x)
+        return result.squeeze()
